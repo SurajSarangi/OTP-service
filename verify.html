@@ -17,6 +17,7 @@
     </form>
 </body>
 <script>
+    let origin = new URL(window.location.href).origin;
     document.forms[0].addEventListener('submit', async(e) => {
         e.preventDefault();
         let f = e.target;
@@ -24,7 +25,7 @@
         for(let i=0; i<f.length-1; i++){
             req[f[i].name] =  f[i].value;
         }
-        const res = await fetch('http://localhost:3005/verify', {
+        const res = await fetch(`${origin}/verify`, {
             method:"POST",
             mode:"cors",
             headers:{
@@ -33,7 +34,7 @@
             body: JSON.stringify(req)
         })
         const x = await res.json();
-        document.getElementById("msg").innerHTML = `${x.message} <a href="http://localhost:3005/">Home</a>`;
+        document.getElementById("msg").innerHTML = `${x.message} <a href="${origin}/">Home</a>`;
     })
 </script>
 </html>

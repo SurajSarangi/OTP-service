@@ -16,7 +16,8 @@
 </body>
 <script>
     const makePost = async(req) => {
-        const res =  await fetch('http://localhost:3005/send', {
+        let origin = new URL(window.location.href).origin;
+        const res =  await fetch(`${origin}/send`, {
             method:"POST",
             mode:"cors",
             headers:{
@@ -27,7 +28,7 @@
         
         const x = await res.json();
         if(x.status === 302){
-            document.getElementById('msg').innerHTML = `${x.message} Please click <a href='http://localhost:3005/verify'>here</a> to verify`;
+            document.getElementById('msg').innerHTML = `${x.message} Please click <a href='${origin}/verify'>here</a> to verify`;
         }
     }
 
