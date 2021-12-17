@@ -10,7 +10,7 @@ const OTPSchema = new Schema({
         lowercase: true
     },
     otp: {
-        type: Number,
+        type: String,
         required: true
     },
     verified: {

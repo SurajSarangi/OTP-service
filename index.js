@@ -106,7 +106,7 @@ app.get('/verify', (req,res) => {
 app.post('/verify', async(req,res) => {
     try{
         let r = await OTP.findOne({'email':req.body.email.trim()});
-        if( parseInt(req.body.OTP) === r.otp){
+        if( req.body.OTP === r.otp){
             try{
                 await OTP.findByIdAndUpdate(r._id, {'verified' : true})
                 res
