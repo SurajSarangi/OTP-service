@@ -29,6 +29,8 @@
         const x = await res.json();
         if(x.status === 302){
             document.getElementById('msg').innerHTML = `${x.message} Please click <a href='${origin}/verify'>here</a> to verify`;
+        } else if(x.status === 301){
+            document.getElementById('msg').innerHTML = `User exists`;
         }
     }
 

@@ -1,5 +1,5 @@
 const info = (req) => {
-    console.log(`${req.pathname} - ${req.method}`);
+    console.log(`${req.method} - ${req.path}`);
 };
 
 module.exports = info;

@@ -40,63 +40,105 @@ app.post('/send', (req, res) => {
         }
     });
     
-    let OTPgen = 54123 || generateOTP();
-
-    const otpservice = new OTP({
-        email : req.body.email,
-        otp : OTPgen,
-        verified : false
-    });
-    otpservice
-        .save()
-        .then(() => console.log(`DB updated for ${req.body.email} with ${OTPgen}`));
-
-    let mailOptions = {
-        from: process.env.MAIL,
-        to: req.body.email,
-        subject: 'Automated Email using Node.JS',
-        html: `OTP for <strong>${req.body.email}</strong> is <h1>${OTPgen}</h1>`
-    };
     
-    transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-            console.log(error);
+    OTP.countDocuments({'email' : req.body.email}, (err, count) => {
+        if(err){
+            console.log(err);
             res
-                .status(404)
-                .end(JSON.stringify({
-                    status: 404,
-                    message: error
+            .status(404)
+            .end(JSON.stringify({
+                status: 404,
+                message: error
             }));
+        } else if (count === 0){
+            let OTPgen = generateOTP();
+            const otpservice = new OTP({
+                email : req.body.email,
+                otp : OTPgen,
+                verified : false
+            });
+            otpservice
+                .save()
+                .then(() => console.log(`DB updated for ${req.body.email} with ${OTPgen}`));
+        
+            let mailOptions = {
+                from: process.env.MAIL,
+                to: req.body.email,
+                subject: 'Automated Email using Node.JS',
+                html: `OTP for <strong>${req.body.email}</strong> is <h1>${OTPgen}</h1>`
+            };
+            
+            transporter.sendMail(mailOptions, function(error, info){
+                if (error) {
+                    console.log(error);
+                    res
+                        .status(404)
+                        .end(JSON.stringify({
+                            status: 404,
+                            message: error
+                    }));
+                } else {
+                    console.log('Email sent: ' + info.response);
+                    res
+                        .status(302)
+                        .end(JSON.stringify({
+                            status:302,
+                            message:"Email Sent."
+                        }))
+                }
+            });
         } else {
-            console.log('Email sent: ' + info.response);
+            console.log('User exists');
             res
                 .status(302)
                 .end(JSON.stringify({
-                    status:302,
-                    message:"Email Sent."
+                    status:301,
+                    message:"User exists."
                 }))
         }
-    });
+    })
 })
 
 app.get('/verify', (req,res) => {
     res.sendFile(path.join(__dirname, '/verify.html'));
 })
 
-app.post('/verify', (req,res) => {
-    if( parseInt(req.body.OTP) === 54123){
-        res
-            .status(200)
-            .end(JSON.stringify({
-                status: 200,
-                message: "OTP verified Successfully"
-            }));
-    } else {
+app.post('/verify', async(req,res) => {
+    try{
+        let r = await OTP.findOne({'email':req.body.email.trim()});
+        if( parseInt(req.body.OTP) === r.otp){
+            try{
+                await OTP.findByIdAndUpdate(r._id, {'verified' : true})
+                res
+                    .status(200)
+                    .end(JSON.stringify({
+                        status: 200,
+                        message: "OTP verified Successfully"
+                    }));
+            }
+            catch(err){
+                res
+                .status(404)
+                .end(JSON.stringify({
+                    status: 404,
+                    message: "Verification Failed"
+                }));
+            }
+        } else {
+            res
+                .status(404)
+                .end(JSON.stringify({
+                    status: 404,
+                    message: "Incorrect OTP"
+                }));
+        }
+    }
+    catch(err){
         res
             .status(404)
             .end(JSON.stringify({
                 status: 404,
-                message: "OTP Verification Failed"
+                message: "Invalid Email"
             }));
     }
 });
